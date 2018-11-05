@@ -35,6 +35,13 @@ func (s *Server) Listen() {
 	r.HandleFunc("/", s.handleIndex)
 	r.HandleFunc("/settings", s.handleSettings)
 
+	// Handle static files
+	r.PathPrefix("/static/").Handler(
+		http.StripPrefix("/static/",
+			http.FileServer(http.Dir("./www/")),
+		),
+	)
+
 	// Starts the HTTP server listening using the router defined previously.
 	fmt.Printf("Server is running at %s:%d...\n", s.Address, s.Port)
 	http.ListenAndServe(fmt.Sprintf("%s:%d", s.Address, s.Port), r)
