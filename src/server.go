@@ -28,8 +28,8 @@ type Server struct {
 
 // Listen starts the HTTP server running on the given address and port.
 func (s *Server) Listen() {
-	// Create a new router, which will be used to listen to HTTP requests and decide
-	// what to do the respond back.
+	// Create a new router, which will be used to listen to HTTP requests and
+	// decide what to do to respond back.
 	r := mux.NewRouter()
 
 	r.HandleFunc("/", s.handleIndex)
