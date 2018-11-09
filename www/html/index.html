@@ -1,0 +1,49 @@
+<!DOCTYPE html>
+<html lang="en">
+    <head>
+        <meta charset="UTF-8">
+        <meta name="viewport" content="width=device-width, initial-scale=1.0">
+        <meta http-equiv="X-UA-Compatible" content="ie=edge">
+        <title>Tab Server</title>
+
+        <link rel="stylesheet" href="/static/css/global.css">
+        <link rel="stylesheet" href="/static/css/index.css">
+    </head>
+    <body>
+        <div class="master">
+            <div>
+                <input type="search" id="search-bar" placeholder="Search...">
+            </div>
+            <table>
+                <tr>
+                    <td>Sort by...</td>
+                    <td>
+                        <select id="sorting">
+                            <option value="title-asc">Title, Ascending</option>
+                            <option value="title-desc">Title, Descending</option>
+                            <option value="artist-asc">Artist, Ascending</option>
+                            <option value="artist-desc">Artist, Descending</option>
+                        </select>
+                    </td>
+                </tr>
+            </table>
+            <ul>
+                <li>Example Song #1</li>
+                <li>Example Song #2</li>
+                <li>Example Song #3</li>
+                <li>Example Song #4</li>
+            </ul>
+            <div class="center">
+                <a href="/settings">Edit Settings</a>
+            </div>
+        </div>
+        <div class="detail">
+            <div>
+                <h1>A Song Title</h1>
+                <button class="delete">Delete</button>
+                <h2>Some Artist (tab, other tag, idk)</h2>
+            </div>
+            <pre>Test</pre>
+        </div>
+    </body>
+</html>

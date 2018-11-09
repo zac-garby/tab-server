@@ -1,0 +1,74 @@
+body {
+    margin: 0;
+    display: grid;
+    width: 100vw;
+    height: 100vh;
+    grid-template-columns: 350px auto;
+    grid-template-rows: 100%;
+}
+
+div.master {
+    border-right: 2px solid rgb(150, 150, 150);
+    background-color: rgb(240, 240, 240);
+    display: grid;
+    grid-template-rows: 40px 40px auto 40px;
+}
+
+div.master > * {
+    border-bottom: 2px solid rgb(150, 150, 150);
+}
+
+div.master > div, div.master > table {
+    padding: 5px;
+}
+
+div.master input[type=search] {
+    width: 100%;
+    height: 28px;
+    font-size: 14pt;
+}
+
+div.master table select {
+    width: 100%;
+}
+
+div.master ul {
+    overflow-y: auto;
+    list-style: none;
+    padding-left: 20px;
+    margin-top: 0;
+    padding-top: 16px;
+}
+
+div.master li {
+    margin-bottom: 12px;
+}
+
+div.detail {
+    display: grid;
+    grid-template-rows: 80px auto;
+}
+
+div.detail div:first-child {
+    border-bottom: 2px solid rgb(150, 150, 150);
+    background-color: rgb(240, 240, 240);
+    padding: 5px;
+    display: grid;
+    grid-template-rows: auto auto;
+    grid-template-columns: auto 100px;
+}
+
+div.detail div:first-child h1, div.detail div:first-child, h2 {
+    margin: 0;
+    padding: 4px;
+}
+
+button.delete {
+    border-color: rgb(140, 80, 80);
+    background-color: rgb(240, 170, 170);
+}
+
+div.detail pre:nth-child(2) {
+    padding: 10px;
+    margin: 0;
+}

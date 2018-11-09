@@ -1,0 +1,25 @@
+html {
+    font-family: sans-serif;
+}
+
+* {
+    color: rgb(50, 50, 50);
+}
+
+.center {
+    text-align: center;
+}
+
+h1, h2, h3 {
+    font-weight: normal;
+}
+
+h2 {
+    color: grey;
+}
+
+button {
+    border: 2px solid rgb(150, 150, 150);
+    background-color: rgb(230, 230, 230);
+    cursor: pointer;
+}
