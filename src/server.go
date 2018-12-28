@@ -24,6 +24,9 @@ type Server struct {
 
 	// Key is the filename of the HTTPS key.
 	Key string
+
+	// Settings stores the settings of this server.
+	Settings *Settings
 }
 
 // Listen starts the HTTP server running on the given address and port.
