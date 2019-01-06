@@ -44,6 +44,7 @@ func (s *Server) Listen() {
 	r.HandleFunc("/settings", s.handleSettings)
 
 	r.HandleFunc("/api/tabs", s.handleTabsAPI)
+	r.HandleFunc("/api/reset-cache", s.handleResetCacheAPI)
 
 	// Handle static files
 	r.PathPrefix("/static/").Handler(
@@ -92,6 +93,8 @@ func (s *Server) handleTabsAPI(w http.ResponseWriter, r *http.Request) {
 	w.Header().Set("Content-Type", "text/json")
 
 	// Get a list of tabs.
+	// If there is an error, it will be returned as a HTTP error
+	// with the status code 500, or Internal Server Error.
 	tabs, err := s.getTabs()
 	if err != nil {
 		http.Error(w, err.Error(), http.StatusInternalServerError)
@@ -99,6 +102,8 @@ func (s *Server) handleTabsAPI(w http.ResponseWriter, r *http.Request) {
 	}
 
 	// Convert the tabs into JSON so they can be transmitted over HTTP.
+	// If there is an error, it will be returned as a HTTP error
+	// with the status code 500, or Internal Server Error.
 	jsonData, err := json.Marshal(tabs)
 	if err != nil {
 		http.Error(w, err.Error(), http.StatusInternalServerError)
@@ -106,4 +111,36 @@ func (s *Server) handleTabsAPI(w http.ResponseWriter, r *http.Request) {
 	}
 
 	w.Write(jsonData)
+}
+
+// handleResetCacheAPI is called to respond to a HTTP request to
+// /api/reset-cache.
+func (s *Server) handleResetCacheAPI(w http.ResponseWriter, r *http.Request) {
+	// Remove all keys in the database with the prefix tab:*.
+	// If there is an error, it will be returned as a HTTP error
+	// with the status code 500, or Internal Server Error.
+	if err := s.Database.Eval(
+		`return redis.call('del', unpack(redis.call('keys', ARGV[1])))`,
+		nil, "tab:*",
+	).Err(); err != nil {
+		http.Error(w, err.Error(), http.StatusInternalServerError)
+		return
+	}
+
+	// Empty the tab ID list and the filename-ID map.
+	// If there is an error, it will be returned as a HTTP error
+	// with the status code 500, or Internal Server Error.
+	if err := s.Database.Del("tabs", "filenames").Err(); err != nil {
+		http.Error(w, err.Error(), http.StatusInternalServerError)
+		return
+	}
+
+	// Reset the tab counter to 0, so the next tab will be
+	// assigned the ID of (0 + 1) = 1.
+	// If there is an error, it will be returned as a HTTP error
+	// with the status code 500, or Internal Server Error.
+	if err := s.Database.Set("tab-counter", 0, 0).Err(); err != nil {
+		http.Error(w, err.Error(), http.StatusInternalServerError)
+		return
+	}
 }
