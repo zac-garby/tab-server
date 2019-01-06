@@ -193,7 +193,7 @@ func capitaliseString(str string, blacklist []string) string {
 		// should not be capitalised.
 		blacklisted := false
 		for _, b := range blacklist {
-			if strings.ToLower(str) == strings.ToLower(b) {
+			if strings.ToLower(word) == strings.ToLower(b) {
 				blacklisted = true
 				break
 			}
