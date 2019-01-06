@@ -32,6 +32,7 @@ func main() {
 		Address:  "",
 		Port:     8000,
 		Settings: settings,
+		Database: db,
 	}
 
 	// Start listening on port 8000.

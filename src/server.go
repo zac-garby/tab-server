@@ -1,9 +1,11 @@
 package src
 
 import (
+	"encoding/json"
 	"fmt"
 	"net/http"
 
+	"github.com/go-redis/redis"
 	"github.com/gorilla/mux"
 )
 
@@ -27,6 +29,9 @@ type Server struct {
 
 	// Settings stores the settings of this server.
 	Settings *Settings
+
+	// Database allows access to the database from server methods.
+	Database *redis.Client
 }
 
 // Listen starts the HTTP server running on the given address and port.
@@ -37,6 +42,8 @@ func (s *Server) Listen() {
 
 	r.HandleFunc("/", s.handleIndex)
 	r.HandleFunc("/settings", s.handleSettings)
+
+	r.HandleFunc("/api/tabs", s.handleTabsAPI)
 
 	// Handle static files
 	r.PathPrefix("/static/").Handler(
@@ -72,4 +79,31 @@ func (s *Server) handleSettings(w http.ResponseWriter, r *http.Request) {
 	//  - reading its contents
 	//  - serving that text, along with relavent metadata
 	http.ServeFile(w, r, "www/html/settings.html")
+}
+
+// handleTabsAPI is called to respond to a HTTP request to /api/tabs.
+func (s *Server) handleTabsAPI(w http.ResponseWriter, r *http.Request) {
+	// Disable caching for this request - caching will be managed
+	// manually by this program.
+	w.Header().Set("Cache-Control", "max-age=0")
+
+	// Set the content type of the response to JSON so browsers
+	// don't attempt to display it as HTML.
+	w.Header().Set("Content-Type", "text/json")
+
+	// Get a list of tabs.
+	tabs, err := s.getTabs()
+	if err != nil {
+		http.Error(w, err.Error(), http.StatusInternalServerError)
+		return
+	}
+
+	// Convert the tabs into JSON so they can be transmitted over HTTP.
+	jsonData, err := json.Marshal(tabs)
+	if err != nil {
+		http.Error(w, err.Error(), http.StatusInternalServerError)
+		return
+	}
+
+	w.Write(jsonData)
 }
