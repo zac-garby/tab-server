@@ -47,6 +47,7 @@ func (s *Server) Listen() {
 	r.HandleFunc("/api/tabs", s.handleTabsAPI)
 	r.HandleFunc("/api/reset-cache", s.handleResetCacheAPI)
 	r.HandleFunc("/api/change-password", s.handleChangePassword)
+	r.HandleFunc("/api/delete-tab", s.handleDeleteTab)
 
 	// Handle static files
 	r.PathPrefix("/static/").Handler(
@@ -199,6 +200,62 @@ func (s *Server) handleChangePassword(w http.ResponseWriter, r *http.Request) {
 	// the SET redis command is used to set the new password.
 	newHash := fmt.Sprintf("%x", sha512.Sum512([]byte(newPassword)))
 	if err := s.Database.Set("password-hash", newHash, 0).Err(); err != nil {
+		http.Error(w, err.Error(), http.StatusInternalServerError)
+		return
+	}
+}
+
+// handleDeleteTab is called to respond to a HTTP request to
+// /api/delete/tab. It will only accept POST requests because the
+// password is sent in the POST form data.
+func (s *Server) handleDeleteTab(w http.ResponseWriter, r *http.Request) {
+	// If the request method isn't POST, send an error back to the client
+	// telling them that only POST will work, with a Method Nod Allowed status.
+	if r.Method != "POST" {
+		http.Error(w, "only POST is supported", http.StatusMethodNotAllowed)
+		return
+	}
+
+	// Get the password they entered and the ID of the tab they intend to
+	// delete. These are stored in the 'password' and 'id' form fields,
+	// respectively. Also, fetch the actual password's hash from the
+	// database, in the key 'password-hash'.
+	var (
+		enteredPassword = r.PostFormValue("password")
+		id              = r.PostFormValue("id")
+		actualHash, err = s.Database.Get("password-hash").Result()
+	)
+
+	// If there is an error while fetching the password's hash from the
+	// database, send the error to the client with an Internal Server
+	// Error status.
+	if err != nil {
+		http.Error(w, err.Error(), http.StatusInternalServerError)
+		return
+	}
+
+	// Hash the password which the client believes to be the existing
+	// password using a SHA512 hash. This is done using the Sum512
+	// function to compute the SHA512 digest of the specified password.
+	//
+	// The %x format option converts the byte array to a string representing
+	// the hash in hexadecimal format.
+	requestHash := fmt.Sprintf("%x", sha512.Sum512([]byte(enteredPassword)))
+
+	fmt.Println(requestHash, actualHash)
+
+	// If the requested hash is not equal to the actual hash of the
+	// password, send an error telling the client exactly that, with
+	// a Bad Request status code.
+	if requestHash != actualHash {
+		http.Error(w, "wrong password", http.StatusBadRequest)
+		return
+	}
+
+	// Now we know that the user has entered the correct password, the
+	// tab can be deleted. This is done through the 'deleteTab' function
+	// inside the api.go file.
+	if err := s.deleteTab(id); err != nil {
 		http.Error(w, err.Error(), http.StatusInternalServerError)
 		return
 	}

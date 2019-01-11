@@ -3,6 +3,7 @@ package src
 import (
 	"fmt"
 	"io/ioutil"
+	"os"
 	"path/filepath"
 	"strings"
 )
@@ -214,4 +215,45 @@ func (s *Server) getTabs() (tabs []*Tab, err error) {
 	}
 
 	return
+}
+
+func (s *Server) deleteTab(id string) error {
+	// Fetch the filename of the tab with the specified ID, so the filename-ID
+	// mapping can later be removed from the filename-ID hashmap.
+	filename, err := s.Database.HGet(fmt.Sprintf("tab:%s", id), "filename").Result()
+	if err != nil {
+		return err
+	}
+
+	// Delete the tab's data hashmap and its tags set, returning any errors which
+	// are encountered.
+	if err := s.Database.Del(
+		fmt.Sprintf("tab:%s", id),
+		fmt.Sprintf("tab:%s:tags", id)).Err(); err != nil {
+		return err
+	}
+
+	// Remove the tab's ID from the ID set, meaning that it will no longer be
+	// included when looking up the list of all tabs.
+	if err := s.Database.SRem("tabs", id).Err(); err != nil {
+		return err
+	}
+
+	// Delete the filename from the hashmap in the database which maps the filenames
+	// to their tab IDs.
+	if err := s.Database.HDel("filenames", filename).Err(); err != nil {
+		return err
+	}
+
+	// Remove the file from the filesystem, calculating it's filepath relative to
+	// the working directory as <tab-directory>/<filename>.
+	if err := os.Remove(filepath.Join(s.Settings.TabDirectory, filename)); err != nil {
+		return err
+	}
+
+	// At this point, the tab has been completely removed from the database, as if
+	// it were never there. So, the function has completed successfully and can
+	// return a nil error meaning that there was no problem.
+
+	return nil
 }
