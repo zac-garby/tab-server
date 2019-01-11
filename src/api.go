@@ -1,8 +1,11 @@
 package src
 
 import (
+	"crypto/sha512"
+	"errors"
 	"fmt"
 	"io/ioutil"
+	"net/http"
 	"os"
 	"path/filepath"
 	"strings"
@@ -256,4 +259,48 @@ func (s *Server) deleteTab(id string) error {
 	// return a nil error meaning that there was no problem.
 
 	return nil
+}
+
+// validatePassword gets the password from the given form field (specified in the
+// passwordField parameter) and checks it against the password hash from the database.
+// If it is incorrect, an error and error status will be returned.
+func (s *Server) validatePassword(r *http.Request, passwordField string) (int, error) {
+	// If the request method isn't POST, send an error back to the client
+	// telling them that only POST will work, with a Method Nod Allowed status.
+	if r.Method != "POST" {
+		return http.StatusMethodNotAllowed, errors.New("only POST is supported")
+	}
+
+	// Get the entered password from the request form and fetch the hash of the
+	// password from the database.
+	var (
+		enteredPassword = r.PostFormValue(passwordField)
+		actualHash, err = s.Database.Get("password-hash").Result()
+	)
+
+	// If there is an error while fetching the password's hash from the
+	// database, send the error to the client with an Internal Server
+	// Error status.
+	if err != nil {
+		return http.StatusInternalServerError, err
+	}
+
+	// Hash the password which the client believes to be the existing
+	// password using a SHA512 hash. This is done using the Sum512
+	// function to compute the SHA512 digest of the specified password.
+	//
+	// The %x format option converts the byte array to a string representing
+	// the hash in hexadecimal format.
+	requestHash := fmt.Sprintf("%x", sha512.Sum512([]byte(enteredPassword)))
+
+	// If the requested hash is not equal to the actual hash of the
+	// password, send an error telling the client exactly that, with
+	// a Bad Request status code.
+	if requestHash != actualHash {
+		return http.StatusBadRequest, errors.New("wrong password")
+	}
+
+	// No problems have come up so just return no error, along with an OK
+	// status.
+	return http.StatusOK, nil
 }
