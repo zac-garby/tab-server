@@ -2,6 +2,7 @@ package src
 
 import (
 	"crypto/sha512"
+	"encoding/json"
 	"errors"
 	"fmt"
 	"io/ioutil"
@@ -303,4 +304,69 @@ func (s *Server) validatePassword(r *http.Request, passwordField string) (int, e
 	// No problems have come up so just return no error, along with an OK
 	// status.
 	return http.StatusOK, nil
+}
+
+// changeSettings updates the server's settings, both in the database and also in
+// the Settings instance in s.Settings. An error will be returned if there is a
+// problem communicating with the database.
+func (s *Server) changeSettings(r *http.Request) error {
+	// Get all of the new settings values from the request form, except from
+	// non-capital-words. The set of non capital words is initialised as an empty
+	// list of strings.
+	var (
+		tabDirectory       = r.PostFormValue("tab-directory")
+		filenamePattern    = r.PostFormValue("filename-pattern")
+		nonCapitalWords    = make([]string, 0)
+		charactersToRemove = r.PostFormValue("characters-to-remove")
+	)
+
+	// Parse the JSON-encoded non-capital-words into the nonCapitalWords list,
+	// returning an error if the JSON data is malformed.
+	if err := json.Unmarshal(
+		[]byte(r.PostFormValue("non-capital-words")), &nonCapitalWords,
+	); err != nil {
+		return err
+	}
+
+	// Use the MSET command (sets multiple scalar values) to set the new settings
+	// data into the database.
+	if err := s.Database.MSet(
+		"tab-directory", tabDirectory,
+		"filename-pattern", filenamePattern,
+		"characters-to-remove", charactersToRemove,
+	).Err(); err != nil {
+		return err
+	}
+
+	// Remove the database's set of non capital words in preparation for when
+	// the new non-capital-words will be added.
+	if err := s.Database.Del("non-capital-words").Err(); err != nil {
+		return err
+	}
+
+	// Create a list of type []interface{} containing the same data as
+	// nonCapitalWords but in the correct type to pass to the SADD command below.
+	nonCapitalWordsI := make([]interface{}, len(nonCapitalWords))
+
+	for i, s := range nonCapitalWords {
+		nonCapitalWordsI[i] = interface{}(s)
+	}
+
+	// Use the SADD command to add each of the non capital words to the database's
+	// non-capital-words set.
+	if err := s.Database.SAdd("non-capital-words", nonCapitalWordsI...).Err(); err != nil {
+		return err
+	}
+
+	// Now the database has been fully updated, also update the in-memory settings
+	// values to the new values.
+	s.Settings = &Settings{
+		CharactersToRemove: charactersToRemove,
+		FilenamePattern:    filenamePattern,
+		NonCapitalWords:    nonCapitalWords,
+		PasswordHash:       s.Settings.PasswordHash,
+		TabDirectory:       tabDirectory,
+	}
+
+	return nil
 }

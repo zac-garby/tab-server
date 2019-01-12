@@ -49,6 +49,7 @@ func (s *Server) Listen() {
 	r.HandleFunc("/api/change-password", s.handleChangePassword)
 	r.HandleFunc("/api/delete-tab", s.handleDeleteTab)
 	r.HandleFunc("/api/settings", s.handleSettingsAPI)
+	r.HandleFunc("/api/change-settings", s.handleChangeSettingsAPI)
 
 	// Handle static files
 	r.PathPrefix("/static/").Handler(
@@ -220,4 +221,24 @@ func (s *Server) handleSettingsAPI(w http.ResponseWriter, r *http.Request) {
 	s.Settings.PasswordHash = passwordHash
 
 	w.Write(jsonData)
+}
+
+// handleChangeSettingsAPI is called to respond to a HTTP request to
+// /api/change-settings. It will update the settings in the running program's
+// memory and also in the database. It requires an admin password in the
+// 'password' form value, so only POST requests are accepted.
+func (s *Server) handleChangeSettingsAPI(w http.ResponseWriter, r *http.Request) {
+	// Validate the user's entered password, in the form field 'password', and
+	// if it is wrong send them a message and exit the function.
+	if status, err := s.validatePassword(r, "password"); err != nil {
+		http.Error(w, err.Error(), status)
+		return
+	}
+
+	// Now we know that the user has entered the correct password, the
+	// settings can be updated using the 'changeSettings' server method.
+	if err := s.changeSettings(r); err != nil {
+		http.Error(w, err.Error(), http.StatusInternalServerError)
+		return
+	}
 }
