@@ -48,6 +48,7 @@ func (s *Server) Listen() {
 	r.HandleFunc("/api/reset-cache", s.handleResetCacheAPI)
 	r.HandleFunc("/api/change-password", s.handleChangePassword)
 	r.HandleFunc("/api/delete-tab", s.handleDeleteTab)
+	r.HandleFunc("/api/settings", s.handleSettingsAPI)
 
 	// Handle static files
 	r.PathPrefix("/static/").Handler(
@@ -93,7 +94,7 @@ func (s *Server) handleTabsAPI(w http.ResponseWriter, r *http.Request) {
 
 	// Set the content type of the response to JSON so browsers
 	// don't attempt to display it as HTML.
-	w.Header().Set("Content-Type", "text/json")
+	w.Header().Set("Content-Type", "application/json")
 
 	// Get a list of tabs.
 	// If there is an error, it will be returned as a HTTP error
@@ -173,7 +174,7 @@ func (s *Server) handleChangePassword(w http.ResponseWriter, r *http.Request) {
 }
 
 // handleDeleteTab is called to respond to a HTTP request to
-// /api/delete/tab. It will only accept POST requests because the
+// /api/delete-tab. It will only accept POST requests because the
 // password is sent in the POST form data.
 func (s *Server) handleDeleteTab(w http.ResponseWriter, r *http.Request) {
 	// Validate the user's entered password, in the form field 'password', and
@@ -190,4 +191,33 @@ func (s *Server) handleDeleteTab(w http.ResponseWriter, r *http.Request) {
 		http.Error(w, err.Error(), http.StatusInternalServerError)
 		return
 	}
+}
+
+// handleSettingsAPI is called to a HTTP request to /api/settings. It will
+// respond with the current settings encoded in JSON. It will be able to
+// accept any request method type because the password is not transmitted.
+func (s *Server) handleSettingsAPI(w http.ResponseWriter, r *http.Request) {
+	// Disable caching for this request - caching will be managed
+	// manually by this program.
+	w.Header().Set("Cache-Control", "max-age=0")
+
+	// Set the content type of the response to JSON so browsers
+	// don't attempt to display it as HTML.
+	w.Header().Set("Content-Type", "application/json")
+
+	passwordHash := s.Settings.PasswordHash
+	s.Settings.PasswordHash = ""
+
+	// Convert the settings into JSON so they can be transmitted over HTTP.
+	// If there is an error, it will be returned as a HTTP error with the
+	// status code 500, or Internal Server Error.
+	jsonData, err := json.Marshal(s.Settings)
+	if err != nil {
+		http.Error(w, err.Error(), http.StatusInternalServerError)
+		return
+	}
+
+	s.Settings.PasswordHash = passwordHash
+
+	w.Write(jsonData)
 }
