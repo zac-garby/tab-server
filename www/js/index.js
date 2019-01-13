@@ -72,7 +72,7 @@ function showTabs() {
     // list element.
     for (var tab of tabsToDisplay) {
         var li = document.createElement("li")
-        li.innerHTML = tab.title + " - " + tab.artist
+        li.innerHTML = "<strong>" + tab.title + "</strong> &mdash; " + tab.artist
         ul.appendChild(li)
     }
 }
