@@ -29,10 +29,11 @@ function updateTabList() {
                 ul.innerHTML = ""
 
                 // For each tab in the list of tabs, append a new <li>
-                // element with its name to the tab list element.
+                // element with its title and artist's name to the tab
+                // list element.
                 for (var tab of tabs) {
                     var li = document.createElement("li")
-                    li.innerHTML = tab.title
+                    li.innerHTML = tab.title + " - " + tab.artist
                     ul.appendChild(li)
                 }
             } else {
