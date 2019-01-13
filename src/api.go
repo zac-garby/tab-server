@@ -170,7 +170,10 @@ func (s *Server) getTabs() (tabs []*Tab, err error) {
 		// Extract the title, artist name, and list of tags from the filename, using
 		// the tokens lexed from the filename pattern earlier. If there is no parse,
 		// log a message to the server and skip to the next filename in the list.
-		title, artist, tags, ok := parseFilename(filename, tokens)
+		title, artist, tags, ok := parseFilename(
+			strings.TrimSuffix(filename, filepath.Ext(filename)),
+			tokens,
+		)
 		if !ok {
 			fmt.Printf("The filename %s could not be parsed.\n", filename)
 			continue
@@ -366,6 +369,37 @@ func (s *Server) changeSettings(r *http.Request) error {
 		NonCapitalWords:    nonCapitalWords,
 		PasswordHash:       s.Settings.PasswordHash,
 		TabDirectory:       tabDirectory,
+	}
+
+	return nil
+}
+
+// resetCache removes all tabs from the database, meaning they will have to be
+// reloaded when the first request is made.
+func (s *Server) resetCache() error {
+	// Remove all keys in the database with the prefix tab:*.
+	// If there is an error, it will be returned as a HTTP error
+	// with the status code 500, or Internal Server Error.
+	if err := s.Database.Eval(
+		`return redis.call('del', unpack(redis.call('keys', ARGV[1])))`,
+		nil, "tab:*",
+	).Err(); err != nil {
+		return err
+	}
+
+	// Empty the tab ID list and the filename-ID map.
+	// If there is an error, it will be returned as a HTTP error
+	// with the status code 500, or Internal Server Error.
+	if err := s.Database.Del("tabs", "filenames").Err(); err != nil {
+		return err
+	}
+
+	// Reset the tab counter to 0, so the next tab will be
+	// assigned the ID of (0 + 1) = 1.
+	// If there is an error, it will be returned as a HTTP error
+	// with the status code 500, or Internal Server Error.
+	if err := s.Database.Set("tab-counter", 0, 0).Err(); err != nil {
+		return err
 	}
 
 	return nil
