@@ -14,13 +14,13 @@
     <body onload="onLoad()">
         <div class="master">
             <div>
-                <input type="search" id="search-bar" placeholder="Search...">
+                <input type="search" id="search-bar" placeholder="Search..." oninput="showTabs()">
             </div>
             <table>
                 <tr>
                     <td>Sort by...</td>
                     <td>
-                        <select id="sorting">
+                        <select id="sorting" oninput="showTabs()">
                             <option value="title-asc">Title, Ascending</option>
                             <option value="title-desc">Title, Descending</option>
                             <option value="artist-asc">Artist, Ascending</option>
