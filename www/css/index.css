@@ -71,4 +71,9 @@ button.delete {
 div.detail pre:nth-child(2) {
     padding: 10px;
     margin: 0;
+    overflow: auto;
+}
+
+ul#tab-list li {
+    cursor: pointer;
 }

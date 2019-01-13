@@ -28,6 +28,13 @@ function updateTabList() {
                 // variable, taking into account the sorting and
                 // filtering options.
                 showTabs()
+
+                // If there is at least one tab in the list of tabs,
+                // select it initially so there isn't a huge blank
+                // area covering most of the page.
+                if (tabs.length > 0) {
+                    selectTab(tabs[0].ID)
+                }
             } else {
                 // If the execution gets here, an error has occured. Thus,
                 // send an error message to the user via an alert.
@@ -71,8 +78,10 @@ function showTabs() {
     // element with its title and artist's name to the tab
     // list element.
     for (var tab of tabsToDisplay) {
+        const id = tab.ID
         var li = document.createElement("li")
         li.innerHTML = "<strong>" + tab.title + "</strong> &mdash; " + tab.artist
+        li.onclick = () => selectTab(id)
         ul.appendChild(li)
     }
 }
@@ -123,4 +132,33 @@ function filterFunction(searchTerm) {
     return (s) => words.every(word =>
         s.title.toLowerCase().match(word.toLowerCase()) ||
         s.artist.toLowerCase().match(word.toLowerCase()))
+}
+
+// selectTab displays the information about the tab with the
+// given ID in the text areas on the right of the page.
+function selectTab(id) {
+    // selected will store the tab with the given ID once the
+    // linear search below has been completed, or will be
+    // undefined if the tab doesn't exist.
+    var selected
+
+    // Linearly search through the list of tabs, looking for
+    // the one with the requested ID.
+    for (var tab of tabs) {
+        if (tab.ID == id) {
+            selected = tab
+            break
+        }
+    }
+
+    // If no matching tab was found, return from the function
+    // without doing anything.
+    if (selected == undefined) return
+
+    // Set the inner HTML fields of each of the elements which need
+    // to be updated to their new values, as found in the selected
+    // tab object.
+    document.getElementById("title").innerHTML = selected.title
+    document.getElementById("info").innerHTML = selected.artist + " (" + selected.tags + ")"
+    document.getElementById("content").innerHTML = selected.content
 }
