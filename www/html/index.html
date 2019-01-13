@@ -8,8 +8,10 @@
 
         <link rel="stylesheet" href="/static/css/global.css">
         <link rel="stylesheet" href="/static/css/index.css">
+
+        <script src="/static/js/index.js"></script>
     </head>
-    <body>
+    <body onload="onLoad()">
         <div class="master">
             <div>
                 <input type="search" id="search-bar" placeholder="Search...">
@@ -27,12 +29,7 @@
                     </td>
                 </tr>
             </table>
-            <ul>
-                <li>Example Song #1</li>
-                <li>Example Song #2</li>
-                <li>Example Song #3</li>
-                <li>Example Song #4</li>
-            </ul>
+            <ul id="tab-list"></ul>
             <div class="center">
                 <a href="/settings">Edit Settings</a>
             </div>
