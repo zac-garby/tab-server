@@ -1,0 +1,42 @@
+div.wrapper {
+    width: 500px;
+
+    position: absolute;
+    left: 0;
+    right: 0;
+    margin: auto;
+    margin-top: 50px;
+
+    display: grid;
+    grid-template-rows: auto auto;
+
+    border: 2px solid black;
+}
+
+div.wrapper > h1:first-child {
+    font-size: 30pt;
+    text-align: center;
+    border-bottom: 2px solid black;
+    padding: 10px;
+    margin: 0;
+}
+
+div.settings-form {
+    padding: 20px;
+    display: grid;
+    grid-template-rows: auto auto auto auto auto auto auto auto;
+    grid-template-columns: auto auto;
+    gap: 10px;
+}
+
+div.settings-form span {
+    display: flex;
+    align-items: center;
+}
+
+div.settings-form button {
+    padding: 5px;
+    background-color: #f8fcb5;
+    border-color: #e2d676;
+    font-weight: bold;
+}

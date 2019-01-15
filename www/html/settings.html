@@ -1,0 +1,45 @@
+<!DOCTYPE html>
+<html lang="en">
+    <head>
+        <meta charset="UTF-8">
+        <meta name="viewport" content="width=device-width, initial-scale=1.0">
+        <meta http-equiv="X-UA-Compatible" content="ie=edge">
+        <title>Tab Server - Settings</title>
+
+        <link rel="stylesheet" href="/static/css/global.css">
+        <link rel="stylesheet" href="/static/css/settings.css">
+
+        <script src="/static/js/settings.js"></script>
+    </head>
+    <body>
+        <div class="wrapper">
+            <h1>Settings</h1>
+
+            <div class="settings-form">
+                <span>Tab Directory:</span>
+                <input type="text" id="tab-directory">
+                
+                <span>Filename Pattern:</span>
+                <input type="text" id="filename-pattern">
+
+                <span>Non-capital Words:</span>
+                <input type="text" id="non-capital-words" placeholder="comma, separated, list">
+
+                <span>Characters to Remove:</span>
+                <input type="text" id="characters-to-remove">
+
+                <span></span>
+                <button>Apply</button>
+
+                <span></span>
+                <button>Reload tabs from files</button>
+
+                <span>Change Admin Password:</span>
+                <span></span>
+
+                <input type="password" id="new-password" placeholder="Enter the new password here...">
+                <button>Change</button>
+            </div>
+        </div>
+    </body>
+</html>

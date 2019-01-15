@@ -1,4 +1,5 @@
 var tabs = []
+var selectedID
 
 // This function will be called after the DOM has been completely
 // loaded, meaning that the DOM elements can be referenced from
@@ -155,10 +156,64 @@ function selectTab(id) {
     // without doing anything.
     if (selected == undefined) return
 
+    // Update the global selected ID to the ID of the tab which
+    // has just been selected.
+    selectedID = id
+
     // Set the inner HTML fields of each of the elements which need
     // to be updated to their new values, as found in the selected
     // tab object.
     document.getElementById("title").innerHTML = selected.title
     document.getElementById("info").innerHTML = selected.artist + " (" + selected.tags + ")"
     document.getElementById("content").innerHTML = selected.content
+}
+
+// deleteSelected sends a HTTP request to /api/delete-tab to
+// delete the currently selected tab. A prompt dialog box is
+// opened to ask the user to enter their password.
+function deleteSelected() {
+    // Ask the user to enter their password by opening up a
+    // prompt dialog, displaying the message "Enter your password:".
+    // No validation needs to be done here, as the ID will be
+    // validated server-side.
+    var password = prompt("Enter your password:")
+
+    // Create a new HTTP request object, which will be used
+    // to request the tab be deleted.
+    var req = new XMLHttpRequest()
+
+    // The onreadystatechange method of the HTTP request is called
+    // when the state of the request changes. In this case, only
+    // ready state 4 (which means that the response has been received)
+    // is relevant.
+    req.onreadystatechange = function() {
+        if (this.readyState == 4) {
+            // If the status of the response is 200, the request was
+            // successful. 200 = OK.
+            if (this.status == 200) {
+                // In this case, the tab has been successfully deleted from
+                // the server. So now, the tab list should be reloaded to reflect those changes.
+                updateTabList()
+            } else {
+                // If the execution gets here, an error has occured. Thus,
+                // send an error message to the user via an alert.
+                alert(this.status + ": " + this.responseText)
+            }
+        }
+    }
+
+    // Create a URLSearchParams object to store the form values which will
+    // be sent in the POST request to the server.
+    var params = new URLSearchParams()
+    params.set("password", password)
+    params.set("id", selectedID)
+
+    // Send the HTTP GET request to /api/delete-tab. location.origin is
+    // the URL without the current path appended, so if I'm running
+    // the server locally it would be http://localhost:8000. true
+    // as the third parameter indicates that the request is
+    // asynchronous, meaning that the user can still interact with
+    // the page while the request is loading.
+    req.open("POST", location.origin + "/api/delete-tab", true)
+    req.send(params)
 }
