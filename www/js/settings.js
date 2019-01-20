@@ -125,3 +125,31 @@ function apply() {
     
     changeSettings(tabDirectory, filenamePattern, nonCapitalWords, charactersToRemove)
 }
+
+// reloadTabs removes all of the cached tabs from the database by sending
+// a HTTP request to /api/reset-cache. It will send an alert to the user
+// to say if that was successful or not.
+function reloadTabs() {
+    // Make a new HTTP request object which will be used to send the HTTP
+    // request.
+    var req = new XMLHttpRequest()
+
+    // The readystatechange will run the following function when the state
+    // of the request is changed, which includes receiving a response.
+    req.onreadystatechange = function() {
+        if (this.readyState == 4) {
+            // Check the response status and send an alert message based
+            // on that status, saying either that the request was successful
+            // or not.
+            if (this.status == 200) {
+                alert("The tabs have been removed from the database. They can be reloaded by navigating back to the home page.")
+            } else {
+                alert("Something went wrong and the tabs couldn't be reloaded!")
+            }
+        }
+    }
+
+    // Send the HTTP request using the GET method to /api/reset-cache.
+    req.open("GET", location.origin + "/api/reset-cache", true)
+    req.send()
+}
