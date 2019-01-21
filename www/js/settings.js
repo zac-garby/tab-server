@@ -153,3 +153,61 @@ function reloadTabs() {
     req.open("GET", location.origin + "/api/reset-cache", true)
     req.send()
 }
+
+// changePassword sends an appropriate request to /api/change-password which
+// will update the password to the newly entered password in the input field,
+// but only if the user can enter the correct current password into a prompt.
+function changePassword() {
+    // Get the password from the input field and validate it. A password is
+    // valid only if it has a length of at least four characters. If the
+    // password is invalid, the function is returned and thus the password
+    // isn't changed.
+    var newPassword = document.getElementById("new-password").value
+    if (newPassword.length < 4) {
+        alert("Your password must be at least four characters! Try again.")
+        return
+    }
+
+    // Ask the user to enter their password by opening up a
+    // prompt dialog, displaying the message "Enter your current password:".
+    // No validation needs to be done here, as the ID will be
+    // validated server-side.
+    var oldPassword = prompt("Enter your current password:")
+
+    // Create a new HTTP request object, which will be used to change the
+    // settings by sending a request.
+    var req = new XMLHttpRequest()
+
+    // The onreadystatechange method of the HTTP request is called
+    // when the state of the request changes. In this case, only
+    // ready state 4 (which means that the response has been received)
+    // is relevant.
+    req.onreadystatechange = function() {
+        if (this.readyState == 4) {
+            // If the status is 200, the request was OK and the settings
+            // change was successful.
+            if (this.status == 200) {
+                alert("Your password has been changed successfully.")
+            } else {
+                // At this point, some error has occured, so send an error
+                // message to the user.
+                alert(this.status + ": " + this.responseText)
+            }
+        }
+    }
+
+    // Create a URLSearchParams object to store the form values which will
+    // be sent in the POST request to the server.
+    var params = new URLSearchParams()
+    params.set("old", oldPassword)
+    params.set("new", newPassword)
+
+    // Send the HTTP GET request to /api/change-settings. location.origin is
+    // the URL without the current path appended, so if I'm running
+    // the server locally it would be http://localhost:8000. true
+    // as the third parameter indicates that the request is
+    // asynchronous, meaning that the user can still interact with
+    // the page while the request is loading.
+    req.open("POST", location.origin + "/api/change-password", true)
+    req.send(params)
+}
