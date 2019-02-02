@@ -1,11 +1,14 @@
 var tabs = []
 var selectedID
+var chords
+var chordSymbols
 
 // This function will be called after the DOM has been completely
 // loaded, meaning that the DOM elements can be referenced from
 // inside this function.
 function onLoad() {
     updateTabList()
+    loadChords()
 }
 
 function updateTabList() {
@@ -166,6 +169,8 @@ function selectTab(id) {
     document.getElementById("title").innerHTML = selected.title
     document.getElementById("info").innerHTML = selected.artist + " (" + selected.tags + ")"
     document.getElementById("content").innerHTML = selected.content
+
+    showChords()
 }
 
 // deleteSelected sends a HTTP request to /api/delete-tab to
@@ -216,4 +221,134 @@ function deleteSelected() {
     // the page while the request is loading.
     req.open("POST", location.origin + "/api/delete-tab", true)
     req.send(params)
+}
+
+function loadChords() {
+    var req = new XMLHttpRequest()
+
+    req.onreadystatechange = function() {
+        if (this.readyState == 4) {
+            if (this.status == 200) {
+                chords = JSON.parse(this.responseText)
+                chordSymbols = Object.keys(chords).sort((a, b) => a.length < b.length)
+                showChords()
+            } else {
+                console.log("error loading chords:", this.status)
+            }
+        }
+    }
+
+    req.open("GET", location.origin + "/static/lib/chord-collection/chords.json")
+    req.send()
+}
+
+// showChords will highlight each of the chords in the currently selected
+// tab and will add event handlers such that when the chord symbol is
+// clicked it will show how to play that chord.
+function showChords() {
+    // This function cannot work if either no tab is selected or the
+    // chords list hasn't been loaded yet, so these conditions must be
+    // tested and verified before going any further. This isn't an error
+    // situation though, the the function is silently returned from.
+    if (selectedID === undefined || chords === undefined) {
+        return
+    }
+
+    // selected will store the tab with the selected ID once the
+    // linear search below has been completed, or will be
+    // undefined if the tab doesn't exist.
+    var selected
+
+    // Linearly search through the list of tabs, looking for
+    // the one with the selected ID.
+    for (var tab of tabs) {
+        if (tab.ID == selectedID) {
+            selected = tab
+            break
+        }
+    }
+
+    // If no tab is selected, return early from the function as nothing
+    // can be done.
+    if (selected === undefined) {
+        return
+    }
+
+    // This list will store the indexes and lengths of each chord in the content.
+    var indexes = []
+
+    for (var symbol of chordSymbols) {
+        // Create a RegExp object using the current chord symbol. Plus
+        // signs are escaped because they are special characters in
+        // regular expressions and as such they would have a specific meaning
+        // if they were not escaped.
+        let sym = symbol.replace("+", "\\+")
+        const pattern = new RegExp(`\\s(${sym})\\s`, "g")
+
+        // For each RegExp match in the currently selected tab content:
+        while ((match = pattern.exec(selected.content)) != null) {
+            let index = match.index + 1
+            // If the index of the chord which was just found lies inside any
+            // previously found chord, skip to the next match.
+            if (indexes.find(c => index >= c.index && index <= c.index + c.length) != undefined) {
+                continue
+            }
+
+            indexes.push({
+                index: index,
+                length: symbol.length,
+            })
+        }
+    }
+
+    // Sort the indexes such that they are in order for splitContent. splitContent
+    // only works on sorted inputs.
+    indexes.sort((a, b) => a.index > b.index)
+
+    // Format the indexes list in the format which the splitContent function likes
+    // so it can be processed further.
+    formattedIndexes = indexes.map(c => [c.index, c.index + c.length]).flat()
+
+    // Split the content into an array of consecutive substrings to separate out
+    // the chord symbols from the rest of the tab.
+    var split = splitContent(selected.content, formattedIndexes)
+
+    var pre = document.getElementById("content")
+    document.getElementById("content").innerHTML = ""
+
+    // Initialise a flag variable to keep track of whether the current content part
+    // is a chord or not. Each iteration of the loop below, this variable is inverted,
+    // because the parts are arranged in an alternating fashion.
+    var isChord = false
+
+    // Iterate over each of the parts of the split content.
+    for (var part of split) {
+        // Add a <span> element to the <pre> to represent the current content part. If
+        // it is a chord, set its class name to chord-symbol.
+        var span = document.createElement("span")
+        span.innerHTML = part
+        if (isChord) span.className = "chord-symbol"
+        pre.appendChild(span)
+
+        isChord = !isChord
+    }
+}
+
+function splitContent(content, indexes) {
+    // The base case. If there are no indexes, the content is placed
+    // inside a list and returned straight away.
+    if (indexes.length == 0) {
+        return [content]
+    }
+
+    // Otherwise, the main chunk of the algorithm is carried out. First, the
+    // first index is separated from the rest of them and the rest are mapped
+    // such that they are all lowered by the value of the first index.
+    var first = indexes[0]
+    var rest = indexes.slice(1).map(n => n - first)
+
+    // The recursive step. Where n = first, return a list where the first element
+    // is the first n characters of the content and the rest of the list is another
+    // call to splitContent with the rest of the content and the rest of the indexes.
+    return [content.slice(0, first)].concat(splitContent(content.slice(first), rest))
 }

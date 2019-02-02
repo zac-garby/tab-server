@@ -77,3 +77,10 @@ div.detail pre:nth-child(2) {
 ul#tab-list li {
     cursor: pointer;
 }
+
+span.chord-symbol {
+    background-color: rgba(240, 200, 40, 0.25);
+    color: rgb(120, 100, 20);
+    font-weight: bold;
+    cursor: pointer;
+}
