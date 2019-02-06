@@ -250,7 +250,7 @@ function showChords() {
     // chords list hasn't been loaded yet, so these conditions must be
     // tested and verified before going any further. This isn't an error
     // situation though, the the function is silently returned from.
-    if (selectedID === undefined || chords === undefined) {
+    if (selectedID === undefined || chords === undefined || chordSymbols === undefined) {
         return
     }
 
@@ -283,7 +283,7 @@ function showChords() {
         // regular expressions and as such they would have a specific meaning
         // if they were not escaped.
         let sym = symbol.replace("+", "\\+")
-        const pattern = new RegExp(`\\s(${sym})\\s`, "g")
+        const pattern = new RegExp(`[\\s\\n()\\\\/^$](${sym})[\\s\\n()\\\\/^$]`, "gm")
 
         // For each RegExp match in the currently selected tab content:
         while ((match = pattern.exec(selected.content)) != null) {
@@ -327,7 +327,10 @@ function showChords() {
         // it is a chord, set its class name to chord-symbol.
         var span = document.createElement("span")
         span.innerHTML = part
-        if (isChord) span.className = "chord-symbol"
+        if (isChord) {
+            span.className = "chord-symbol"
+            span.onclick = chordSymbolClicked
+        }
         pre.appendChild(span)
 
         isChord = !isChord
@@ -351,4 +354,60 @@ function splitContent(content, indexes) {
     // is the first n characters of the content and the rest of the list is another
     // call to splitContent with the rest of the content and the rest of the indexes.
     return [content.slice(0, first)].concat(splitContent(content.slice(first), rest))
+}
+
+// This function will cause the fingering box element to either become visible
+// or invisible based on whether the parameter is true or false respectively.
+function showFingeringBox(show) {
+    if (show) {
+        document.getElementById("chord-box").classList.remove("invisible")
+    } else {
+        document.getElementById("chord-box").classList.add("invisible")
+    }
+}
+
+// This function will be called whenever a chord symbol is clicked on by the
+// user. It will first show the fingering box if it is not already visible
+// and will then display the potential fingerings for that chord.
+function chordSymbolClicked(evt) {
+    // evt.target is the element from which the event arised. Thus, its
+    // innerHTML is the chord's symbol.
+    var symbol = evt.target.innerHTML
+
+    // Show the fingering box, which will be used to show the chord diagrams.
+    showFingeringBox(true)
+
+    // Grab a reference to the fingering box element, and set its innerHTML
+    // to an empty string to remove all children.
+    var box = document.getElementById("chord-box")
+    box.innerHTML = ""
+
+    // Get the list of possible fingerings for the selected chord and put them
+    // into a variable called 'fingerings'
+    var fingerings = chords[symbol]
+
+    for (var fingering of fingerings) {
+        // Put the list of finger positions into a list called 'positions' and
+        // the fingers to be used for each string into another list called
+        // 'fingers'.
+        var positions = fingering.positions.join("")
+        var fingers = fingering.fingerings[0].join("").replace(/0/g, "-")
+
+        // Don't render the fingering if it is not six characters long. This is
+        // still possible to render but not with the particular library I'm using.
+        if (positions.length != 6) {
+            continue
+        }
+
+        // Create the <chord> element which will be used to render this fingering.
+        // Give the releveant arguments to the function so it will show the proper
+        // fingering.
+        var elem = ChordJS.generate(
+            symbol,
+            positions,
+            fingers,
+            4)
+        
+        box.appendChild(elem)
+    }
 }

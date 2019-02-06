@@ -45,6 +45,7 @@ div.master li {
 }
 
 div.detail {
+    position: relative;
     display: grid;
     grid-template-rows: 80px auto;
 }
@@ -83,4 +84,20 @@ span.chord-symbol {
     color: rgb(120, 100, 20);
     font-weight: bold;
     cursor: pointer;
+}
+
+div.chord-box {
+    position: absolute;
+    left: 0;
+    right: 0;
+    bottom: 0;
+    height: 180px;
+    background-color: white;
+    border-top: 2px solid rgb(150, 150, 150);
+    overflow-y: hidden;
+    overflow-x: auto;
+}
+
+.invisible {
+    display: none;
 }
