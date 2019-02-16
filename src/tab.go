@@ -320,9 +320,11 @@ func (s *Server) cacheNewTab(tab *Tab) error {
 		tags[i] = interface{}(tag)
 	}
 
-	// Create the tab's tag set, in the tab:ID:tags key.
-	if err := s.Database.SAdd(fmt.Sprintf("tab:%v:tags", id), tags...).Err(); err != nil {
-		return err
+	if len(tags) > 0 {
+		// Create the tab's tag set, in the tab:ID:tags key.
+		if err := s.Database.SAdd(fmt.Sprintf("tab:%v:tags", id), tags...).Err(); err != nil {
+			return err
+		}
 	}
 
 	return nil
