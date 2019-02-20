@@ -191,7 +191,8 @@ func (s *Server) getTabs() (tabs []*Tab, err error) {
 			return nil, err
 		}
 
-		// Construct the tab instance, excluding the ID as this will be
+		// Construct the tab instance, excluding the ID as this will be added when
+		// cacheNewTab is called.
 		tab := &Tab{
 			Title:    title,
 			Artist:   artist,
